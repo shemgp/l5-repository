@@ -144,7 +144,21 @@ class RequestCriteria implements CriteriaInterface
                     ->orderBy($sortColumn, $sortedBy)
                     ->addSelect($table.'.*');
             } else {
-                $model = $model->orderBy($orderBy, $sortedBy);
+                if (strpos($orderBy, ".")) {
+                    $split = explode('.', $orderBy);
+                    $lastColumn = array_pop($split);
+                    foreach($split as $column)
+                    {
+                        $snakeName = snake_case($column);
+                        $keyName = $snakeName.'_id';
+                        $tableName = rtrim($snakeName.'s');
+                        $model = $model->leftJoin($tableName, $keyName, '=', $tableName.'.id' );
+                    }
+                    $model = $model->orderBy($tableName.'.'.$lastColumn, $sortedBy);
+                }
+                else {
+                    $model = $model->orderBy($orderBy, $sortedBy);
+                }
             }
         }
 
