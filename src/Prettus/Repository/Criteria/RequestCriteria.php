@@ -147,14 +147,26 @@ class RequestCriteria implements CriteriaInterface
                 if (strpos($orderBy, ".")) {
                     $split = explode('.', $orderBy);
                     $lastColumn = array_pop($split);
+                    $model_pointer = $model;
                     foreach($split as $column)
                     {
-                        $snakeName = snake_case($column);
-                        $keyName = $snakeName.'_id';
-                        $tableName = rtrim($snakeName.'s');
-                        $model = $model->leftJoin($tableName, $keyName, '=', $tableName.'.id' );
+                        $current_relation = $model_pointer->$column();
+
+                        // find relation info
+                        $join_table = $current_relation->getRelated()->getTable();
+                        $parent_key = $current_relation->getQualifiedParentKeyName();
+                        if (method_exists($current_relation, 'getPlainForeignKey'))
+                            $foreign_key = $join_table.'.'.$current_relation->getPlainForeignKey();
+                        else
+                            $foreign_key = $current_relation->getQualifiedForeignKey();
+
+                        // set join to relation
+                        $model = $model->leftJoin($join_table, $foreign_key, '=', $parent_key );
+
+                        // next relation
+                        $model_pointer = $current_relation->getRelated();
                     }
-                    $model = $model->orderBy($tableName.'.'.$lastColumn, $sortedBy);
+                    $model = $model->orderBy($join_table.'.'.$lastColumn, $sortedBy);
                 }
                 else {
                     $model = $model->orderBy($orderBy, $sortedBy);
