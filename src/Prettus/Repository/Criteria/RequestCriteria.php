@@ -147,11 +147,11 @@ class RequestCriteria implements CriteriaInterface
                 if (strpos($orderBy, ".")) {
                     $split = explode('.', $orderBy);
                     $lastColumn = array_pop($split);
-                    $model_pointer = $model;
+
+                    $model_pointer = $model->getModel();
                     foreach($split as $column)
                     {
                         $current_relation = $model_pointer->$column();
-
                         // find relation info
                         $join_table = $current_relation->getRelated()->getTable();
                         $parent_key = $current_relation->getQualifiedParentKeyName();
