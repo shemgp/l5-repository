@@ -155,15 +155,17 @@ class RequestCriteria implements CriteriaInterface
 
                         // find relation info and link them
                         $join_table = $current_relation->getRelated()->getTable();
-                        if (method_exists($current_relation, 'getQualifiedOtherKeyName'))
+                        if (method_exists($current_relation, 'getQualifiedForeignKey')
+                                && method_exists($current_relation, 'getQualifiedOtherKeyName')) // BelongsTo
                         {
                             $foreign_key = $current_relation->getQualifiedForeignKey();
                             $other_key = $current_relation->getQualifiedOtherKeyName();
                             $model = $model->leftJoin($join_table, $foreign_key, '=', $other_key);
                         }
-                        else if (method_exists($current_relation, 'getQualifiedParentKeyName'))
+                        else if (method_exists($current_relation, 'getForeignKey')
+                                && method_exists($current_relation, 'getQualifiedParentKeyName')) // HasOne
                         {
-                            $foreign_key = $current_relation->getQualifiedForeignKey();
+                            $foreign_key = $current_relation->getForeignKey();
                             $local_key = $current_relation->getQualifiedParentKeyName();
                             $model = $model->leftJoin($join_table, $foreign_key, '=', $local_key );
                         }
