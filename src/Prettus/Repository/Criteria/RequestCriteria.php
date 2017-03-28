@@ -152,17 +152,25 @@ class RequestCriteria implements CriteriaInterface
                     foreach($split as $column)
                     {
                         $current_relation = $model_pointer->$column();
-                        // find relation info
+
+                        // find relation info and link them
                         $join_table = $current_relation->getRelated()->getTable();
-                        $parent_key = $current_relation->getQualifiedParentKeyName();
-                        if (method_exists($current_relation, 'getPlainForeignKey'))
-                            $foreign_key = $join_table.'.'.$current_relation->getPlainForeignKey();
-                        else
+                        if (method_exists($current_relation, 'getQualifiedOtherKeyName'))
+                        {
                             $foreign_key = $current_relation->getQualifiedForeignKey();
-
-                        // set join to relation
-                        $model = $model->leftJoin($join_table, $foreign_key, '=', $parent_key );
-
+                            $other_key = $current_relation->getQualifiedOtherKeyName();
+                            $model = $model->leftJoin($join_table, $foreign_key, '=', $other_key);
+                        }
+                        else if (method_exists($current_relation, 'getQualifiedParentKeyName'))
+                        {
+                            $foreign_key = $current_relation->getQualifiedForeignKey();
+                            $local_key = $current_relation->getQualifiedParentKeyName();
+                            $model = $model->leftJoin($join_table, $foreign_key, '=', $local_key );
+                        }
+                        else
+                        {
+                            throw new \Exception("Unaccounted for relation: ".get_class($current_relation));
+                        }
                         // next relation
                         $model_pointer = $current_relation->getRelated();
                     }
