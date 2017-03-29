@@ -176,6 +176,10 @@ class RequestCriteria implements CriteriaInterface
                         // next relation
                         $model_pointer = $current_relation->getRelated();
                     }
+
+                    // use primary table's key as id
+                    $model = $model->selectRaw('*, "'.$model->getModel()->table.'"."'.$model->getModel()->getKeyName().'" AS "'.$model->getModel()->getKeyName().'"');
+
                     $model = $model->orderBy($join_table.'.'.$lastColumn, $sortedBy);
                 }
                 else {
