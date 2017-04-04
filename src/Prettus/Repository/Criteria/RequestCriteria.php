@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Prettus\Repository\Contracts\CriteriaInterface;
 use Prettus\Repository\Contracts\RepositoryInterface;
+use Schema;
 
 /**
  * Class RequestCriteria
@@ -178,6 +179,9 @@ class RequestCriteria implements CriteriaInterface
                     }
 
                     // use primary table's key as id
+                    $add_select_name = '';
+                    if (Schema::hasColumn($model->getModel()->getTable(), 'name'))
+                        $add_select_name = ", ".$model->getModel()->getTable().".name AS name";
                     $model = $model->selectRaw('*, "'.$model->getModel()->table.'"."'.$model->getModel()->getKeyName().'" AS "'.$model->getModel()->getKeyName().'"');
 
                     $model = $model->orderBy($join_table.'.'.$lastColumn, $sortedBy);
