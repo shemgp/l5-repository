@@ -69,6 +69,17 @@ class RequestCriteria implements CriteriaInterface
 
                     $condition = trim(strtolower($condition));
 
+                    // relation_name.field -> relationName.field
+                    $relation = null;
+                    if(stripos($field, '.')) {
+                        $exploded_fields = explode('.', $field);
+                        $fields = array();
+                        foreach($exploded_fields as $ren_field)
+                            $fields[] = camel_case($ren_field);
+
+                        $field = implode('.', $fields);
+                    }
+
                     if (isset($searchData[$field])) {
                         $value = ($condition == "like" || $condition == "ilike") ? "%{$searchData[$field]}%" : $searchData[$field];
                     } else {
@@ -77,11 +88,10 @@ class RequestCriteria implements CriteriaInterface
                         }
                     }
 
-                    $relation = null;
                     if(stripos($field, '.')) {
-                        $explode = explode('.', $field);
-                        $field = array_pop($explode);
-                        $relation = implode('.', $explode);
+                        $exploded_fields = explode('.', $field);
+                        $field = array_pop($exploded_fields);
+                        $relation = implode('.', $exploded_fields);
                     }
                     $modelTableName = $query->getModel()->getTable();
                     if ( $isFirstField || $modelForceAndWhere ) {
@@ -178,11 +188,9 @@ class RequestCriteria implements CriteriaInterface
                         $model_pointer = $current_relation->getRelated();
                     }
 
-                    // use primary table's key as id
-                    $add_select_name = '';
-                    if (Schema::hasColumn($model->getModel()->getTable(), 'name'))
-                        $add_select_name = ", ".$model->getModel()->getTable().".name AS name";
-                    $model = $model->selectRaw('*, "'.$model->getModel()->table.'"."'.$model->getModel()->getKeyName().'" AS "'.$model->getModel()->getKeyName().'"');
+                    // use names of parent table when columns conflict
+                    // TODO: make this more error proof: joined table's columns should have their dot notation name?
+                    $model = $model->selectRaw('*, "'.$model->getModel()->getTable().'".*');
 
                     $model = $model->orderBy($join_table.'.'.$lastColumn, $sortedBy);
                 }
